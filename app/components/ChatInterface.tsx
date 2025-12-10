@@ -88,6 +88,11 @@ export default function ChatInterface({ repoId, githubUrl, onDisconnect }: ChatI
     textareaRef.current?.focus();
   };
 
+  const handleClearChat = () => {
+    setMessages([]);
+    setError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -243,6 +248,19 @@ export default function ChatInterface({ repoId, githubUrl, onDisconnect }: ChatI
             <p className="text-xs text-gray-400 truncate max-w-md font-mono">{githubUrl}</p>
           </div>
           <div className="flex items-center gap-2 ml-4">
+            {messages.length > 0 && (
+              <button
+                onClick={handleClearChat}
+                className="p-2 text-gray-600 hover:text-red-600 border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 transition-all duration-200"
+                aria-label="Clear chat"
+                title="Clear chat"
+                disabled={loading}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
             <button
               onClick={() => setSettingsOpen(true)}
               className="p-2 text-gray-600 hover:text-gray-900 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"

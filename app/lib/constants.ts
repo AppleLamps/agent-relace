@@ -57,7 +57,7 @@ export const AVAILABLE_MODELS = [
         name: 'Devstral',
         provider: 'Mistral AI',
         context: '262k',
-        output: '262k',
+        output: '32k',
         description: 'Free model optimized for development tasks',
         badge: 'Free',
     },
@@ -74,7 +74,7 @@ export const AVAILABLE_MODELS = [
         name: 'GPT OSS 120B Exacto',
         provider: 'OpenAI',
         context: '131k',
-        output: '131k',
+        output: '32k',
         description: 'Large open-source model with precision focus',
     },
     {
@@ -82,7 +82,7 @@ export const AVAILABLE_MODELS = [
         name: 'MiniMax M2',
         provider: 'MiniMax',
         context: '262k',
-        output: '130k',
+        output: '32k',
         description: 'Balanced performance with large output capacity',
     },
 ];

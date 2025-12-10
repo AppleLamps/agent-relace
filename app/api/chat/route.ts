@@ -58,14 +58,15 @@ async function retryWithBackoff<T>(
 
 /**
  * Get max output tokens based on model ID
+ * Note: These are conservative limits to leave room for input context
  */
 function getMaxOutputTokens(modelId: string): number {
   const outputLimits: Record<string, number> = {
     'x-ai/grok-4.1-fast': 30000,
-    'mistralai/devstral-2512:free': 262000,
+    'mistralai/devstral-2512:free': 32000,  // Conservative limit for free model
     'x-ai/grok-code-fast-1': 10000,
-    'openai/gpt-oss-120b:exacto': 131000,
-    'minimax/minimax-m2': 130000,
+    'openai/gpt-oss-120b:exacto': 32000,    // Conservative limit
+    'minimax/minimax-m2': 32000,            // Conservative limit
   };
   return outputLimits[modelId] || MODEL_CONFIG.MAX_OUTPUT_TOKENS;
 }
