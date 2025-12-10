@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
 import { getRelaceClient, extractRelaceError } from '../../lib/relace-client';
 import { validateUUID, sanitizeUserInput, detectInjectionPatterns } from '../../lib/validation';
-import { RETRIEVAL_CONFIG, MESSAGE_VALIDATION, MODEL_CONFIG, RETRY_CONFIG, SECURITY_CONFIG } from '../../lib/constants';
+import { RETRIEVAL_CONFIG, MESSAGE_VALIDATION, MODEL_CONFIG, RETRY_CONFIG, SECURITY_CONFIG, AVAILABLE_MODELS } from '../../lib/constants';
 import { buildOptimizedContext } from '../../lib/context-optimizer';
 
 // Initialize OpenRouter client (OpenAI-compatible API)
@@ -56,6 +56,20 @@ async function retryWithBackoff<T>(
   throw lastError;
 }
 
+/**
+ * Get max output tokens based on model ID
+ */
+function getMaxOutputTokens(modelId: string): number {
+  const outputLimits: Record<string, number> = {
+    'x-ai/grok-4.1-fast': 30000,
+    'mistralai/devstral-2512:free': 262000,
+    'x-ai/grok-code-fast-1': 10000,
+    'openai/gpt-oss-120b:exacto': 131000,
+    'minimax/minimax-m2': 130000,
+  };
+  return outputLimits[modelId] || MODEL_CONFIG.MAX_OUTPUT_TOKENS;
+}
+
 interface RetrieveResult {
   results: Array<{
     filename: string;
@@ -83,7 +97,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const { repoId, message, conversationHistory = [], stream = false } = body;
+    const { repoId, message, conversationHistory = [], stream = false, model } = body;
+
+    // Validate model if provided
+    const validModelIds = AVAILABLE_MODELS.map(m => m.id);
+    const selectedModel = model && validModelIds.includes(model) ? model : MODEL_CONFIG.PRIMARY_MODEL;
 
     // Validate inputs
     if (!repoId || typeof repoId !== 'string') {
@@ -220,12 +238,16 @@ ${escapedCodeContext}`;
       { role: 'user', content: sanitizedMessage },
     ];
 
+    // Get model-specific output limits
+    const modelConfig = AVAILABLE_MODELS.find(m => m.id === selectedModel);
+    const maxOutputTokens = getMaxOutputTokens(selectedModel);
+
     // Step 5: Call OpenRouter with model configuration
     const completionOptions: any = {
-      model: MODEL_CONFIG.PRIMARY_MODEL,
+      model: selectedModel,
       messages: messages as any,
       temperature: MODEL_CONFIG.TEMPERATURE,
-      max_tokens: MODEL_CONFIG.MAX_OUTPUT_TOKENS,
+      max_tokens: maxOutputTokens,
       fallbacks: MODEL_CONFIG.FALLBACK_MODELS,
     };
 

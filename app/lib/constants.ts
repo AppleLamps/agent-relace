@@ -42,6 +42,51 @@ export const MODEL_CONFIG = {
     ],
 };
 
+// Available models for user selection
+export const AVAILABLE_MODELS = [
+    {
+        id: 'x-ai/grok-4.1-fast',
+        name: 'Grok 4.1 Fast',
+        provider: 'xAI',
+        context: '2M',
+        output: '30k',
+        description: 'High-performance model with massive context window',
+    },
+    {
+        id: 'mistralai/devstral-2512:free',
+        name: 'Devstral',
+        provider: 'Mistral AI',
+        context: '262k',
+        output: '262k',
+        description: 'Free model optimized for development tasks',
+        badge: 'Free',
+    },
+    {
+        id: 'x-ai/grok-code-fast-1',
+        name: 'Grok Code Fast',
+        provider: 'xAI',
+        context: '256k',
+        output: '10k',
+        description: 'Specialized for code generation and analysis',
+    },
+    {
+        id: 'openai/gpt-oss-120b:exacto',
+        name: 'GPT OSS 120B Exacto',
+        provider: 'OpenAI',
+        context: '131k',
+        output: '131k',
+        description: 'Large open-source model with precision focus',
+    },
+    {
+        id: 'minimax/minimax-m2',
+        name: 'MiniMax M2',
+        provider: 'MiniMax',
+        context: '262k',
+        output: '130k',
+        description: 'Balanced performance with large output capacity',
+    },
+];
+
 // Retry configuration
 export const RETRY_CONFIG = {
     /** Maximum number of retry attempts */
