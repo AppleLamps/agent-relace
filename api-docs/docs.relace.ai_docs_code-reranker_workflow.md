@@ -1,0 +1,144 @@
+---
+url: "https://docs.relace.ai/docs/code-reranker/workflow"
+title: "Workflow Guide - Relace"
+---
+
+[Skip to main content](https://docs.relace.ai/docs/code-reranker/workflow#content-area)
+
+[Relace home page![light logo](https://mintcdn.com/relace/1ZQZvfGMxZqjQ7h5/logo/light.svg?fit=max&auto=format&n=1ZQZvfGMxZqjQ7h5&q=85&s=94e8259db61cf3ff8092930a089cb6e3)![dark logo](https://mintcdn.com/relace/1ZQZvfGMxZqjQ7h5/logo/dark.svg?fit=max&auto=format&n=1ZQZvfGMxZqjQ7h5&q=85&s=6e190522144ef6e74d427dcd426e5dde)](https://relace.ai/)
+
+Search...
+
+Ctrl K
+
+Search...
+
+Navigation
+
+Guides
+
+Workflow Guide
+
+On this page
+
+- [Why use Workflows?](https://docs.relace.ai/docs/code-reranker/workflow#why-use-workflows)
+- [Retrieval Step](https://docs.relace.ai/docs/code-reranker/workflow#retrieval-step)
+- [Query Composition](https://docs.relace.ai/docs/code-reranker/workflow#query-composition)
+- [Choosing a Relevance Threshold](https://docs.relace.ai/docs/code-reranker/workflow#choosing-a-relevance-threshold)
+
+We call code edit systems with of a series of hand-crafted prompts, “workflows”. It’s where you have a system prompt describing the conventions used for your application, and you pass in a set of relevant code files along with the user request as context to a model.This convention comes from Anthropic’s [blog post](https://www.anthropic.com/engineering/building-effective-agents) on building effective agents.
+
+## [​](https://docs.relace.ai/docs/code-reranker/workflow\#why-use-workflows)  Why use Workflows?
+
+Agents equipped with tool-calling are becoming more popular due to their flexibility. This flexibility comes at a cost though — they often spend a lot of time viewing files, running bash commands, and checking their work.Using a hand-crafted workflow requires more iteration on prompting & orchestration, but it can be many times faster. For prompt-to-app products, where latency can cause significant user frustration, the workflow approach is a strong option.
+
+## [​](https://docs.relace.ai/docs/code-reranker/workflow\#retrieval-step)  Retrieval Step
+
+With workflows you only have one shot at retrieval before generation, so you have to make sure you’re passing all the relevant files to the model.If the codebase is small enough, you can just pass all files into context to be safe. However, you quickly run into context limits as your users start building on top of more complex applications.Using the Relace reranker with a robust query will accurately prune down the context you send to the model.
+
+## [​](https://docs.relace.ai/docs/code-reranker/workflow\#query-composition)  Query Composition
+
+Include the following in your query to improve retrieval:
+
+Required
+
+- _User request_ — the most recent direction given to the LLM.
+
+Recommended
+
+- _User Conversation_ — < 10k tokens of transcript between user and LLM.
+- _Error Tracebacks_ — context for any runtime or build errors detected.
+
+Optional
+
+- _Fille Edit Count_ — number of times files were edited in the conversation.
+- _Current Page_ — code snippet of the current page the user is interfacing with.
+
+We specifically used an architecture with a context limit of 32k tokens in order to support highly complex queries along with very long code files. Here’s an example of how you might structure a query with a comprehensive conversation summary:
+
+Query Example
+
+Copy
+
+Ask AI
+
+```
+Request #1: Please connect my supabase project [PROJECT_NAME]
+
+AI Response #1: I found tables in your Supabase project: branches, group_members, payments, profiles, savings, identified_borrowers, loans, notifications, disbursement_rosters, invitations, borrower_qr_codes, lender_qr_codes, personal_loan_payments, personal_loans, and savings_groups. Your app is now connected to Supabase. What's next? Just keep building! For any questions, just ask. If you plan to have users log in, we highly recommend setting up authentication first, before adding any other features.
+
+Files Modified:
+• edited package.json
+• edited package-lock.json
+• created src/integrations/supabase/types.ts
+• created src/integrations/supabase/client.ts
+• created supabase/config.toml
+
+Request #2: In this loan details page, use solid icons, and improve the appearance of all components, to be native and solid, (even the tab component)
+
+AI Response #2: Improved the appearance of all components in the PersonalLoanDetails page with solid icons and a more native, solid design. This included replacing CheckCircle with CheckCircle2 for solid versions, enhancing badge styling, improving tab component styling, and redesigning detail cards with solid, colorful backgrounds and better typography.
+
+Files Modified:
+• edited src/pages/LoanDetails.tsx
+
+Current User Request
+Request: Indicate the Duration Progress (what is currently being called Repayment progress) and add a repayment progress that shows the amount paid out of the total, as another progress bar. These should be beautiful and place them immediately below the Loan Amount, Total to Pay Back.
+
+Current Route: /personal-loan-details/[LOAN_ID]
+```
+
+See all 23 lines
+
+We’ve kept the conversation short for the sake of readability, but this could be extended up to 10k tokens. Empirically, pushing beyond 10k tokens makes it more likely that you’ll have to truncate the code snippets you’re comparing against, which kills performance.
+
+## [​](https://docs.relace.ai/docs/code-reranker/workflow\#choosing-a-relevance-threshold)  Choosing a Relevance Threshold
+
+Our code reranker returns a list of objects with filename and relevance score, like this:
+
+Copy
+
+Ask AI
+
+```
+[\
+  {\
+    "filename": "src/components/UserProfile.tsx",\
+    "relevance_score": 0.9598\
+  },\
+  {\
+    "filename": "src/types/user.ts",\
+    "relevance_score": 0.0321\
+  },\
+  {\
+    "filename": "src/components/Header.tsx",\
+    "relevance_score": 0.0014\
+  }\
+]
+```
+
+You’ll need to choose an appropriate threshold based on the regime you are in:
+
+- Codebase is too big for the context window, and you have to filter down no matter what
+- Codebase fits in the context, but you want to filter to save on input tokens
+
+For case 1, only the ordering matters — you basically just feed in all the top files up to the model’s token limit into context.We have a `token_limit` parameter to make this easy. Just set it to the context length of your generation model with some buffer room for the system prompt.For case 2, you set a relevance threshold based on the recall you want to hit.
+
+| Strategy | Recall | Threshold | Tokens Saved |
+| --- | --- | --- | --- |
+| Conservative | 98%+ | ≤ 0.05 | ~45% |
+| Balanced | 95%+ | ≤ 0.10 | ~55% |
+| Aggressive | 85%+ | ≤ 0.25 | ~70% |
+
+This table is based on an average of three internal evaluation datasets.
+Results may vary on other codebases and use cases. Please reach out to our
+team to run evals with your data.
+
+For more code examples and endpoint info, see the [API reference](https://docs.relace.ai/api-reference/code-reranker/rank-v2).
+
+[Quickstart](https://docs.relace.ai/docs/code-reranker/quickstart) [Agent Tool Definition](https://docs.relace.ai/docs/code-reranker/agent)
+
+Ctrl+I
+
+Assistant
+
+Responses are generated using AI and may contain mistakes.

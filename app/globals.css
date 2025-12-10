@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Markdown content styling */
+.markdown-content {
+  @apply text-gray-800;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  @apply font-semibold text-gray-900;
+}
+
+.markdown-content code {
+  @apply font-mono;
+}
+
+.markdown-content pre {
+  @apply overflow-x-auto;
+}
+
+.markdown-content a {
+  @apply text-blue-600 hover:text-blue-800;
+}
+
+/* Syntax highlighting overrides */
+.markdown-content pre code {
+  @apply block p-4;
+}
+
+/* Ensure code blocks are properly styled */
+.markdown-content pre {
+  @apply bg-gray-900 text-gray-100 rounded-lg;
+}
+
