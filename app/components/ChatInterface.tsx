@@ -191,7 +191,7 @@ export default function ChatInterface({ repoId, githubUrl, onDisconnect }: ChatI
             <div className="text-center text-gray-500 mt-20">
               <p className="text-lg mb-2">👋 Welcome!</p>
               <p>Ask me anything about your codebase.</p>
-              <p className="text-sm mt-2">Try: "How does authentication work?" or "Show me the main entry point"</p>
+              <p className="text-sm mt-2">Try: &quot;How does authentication work?&quot; or &quot;Show me the main entry point&quot;</p>
             </div>
           )}
           

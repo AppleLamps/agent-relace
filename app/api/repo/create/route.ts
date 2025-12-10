@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getRelaceClient, extractRelaceError } from '../../lib/relace-client';
-import { validateGitHubUrl, validateBranchName } from '../../lib/validation';
+import { getRelaceClient, extractRelaceError } from '@/lib/relace-client';
+import { validateGitHubUrl, validateBranchName } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
@@ -38,6 +38,12 @@ export async function POST(request: Request) {
     }
     
     const { owner, repo } = urlValidation;
+    if (!owner || !repo) {
+      return NextResponse.json(
+        { error: 'Invalid GitHub URL format. Expected https://github.com/{owner}/{repo}' },
+        { status: 400 }
+      );
+    }
     const fullUrl = `https://github.com/${owner}/${repo}`;
     
     // Create Relace repo from GitHub

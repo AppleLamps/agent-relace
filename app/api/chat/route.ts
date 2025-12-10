@@ -59,7 +59,7 @@ async function retryWithBackoff<T>(
 interface RetrieveResult {
   results: Array<{
     filename: string;
-    content?: string;
+    content?: string | null;
     score: number;
   }>;
   hash: string;
@@ -148,9 +148,15 @@ export async function POST(request: Request) {
       console.warn(`Warning: ${retrievalResult.pending_embeddings} embeddings still pending for repo ${repoId}`);
     }
 
+    // Normalize null contents to undefined for downstream helpers
+    const normalizedResults = retrievalResult.results.map((result) => ({
+      ...result,
+      content: result.content ?? undefined,
+    }));
+
     // Step 2: Build optimized context from retrieved files
     // Uses intelligent file selection and sizing for large repositories
-    const optimizedContextResult = buildOptimizedContext(retrievalResult.results, {
+    const optimizedContextResult = buildOptimizedContext(normalizedResults, {
       maxFiles: RETRIEVAL_CONFIG.MAX_CONTEXT_FILES,
       softLimit: RETRIEVAL_CONFIG.SOFT_CONTEXT_LIMIT,
       hardLimit: RETRIEVAL_CONFIG.HARD_CONTEXT_LIMIT,
@@ -229,6 +235,7 @@ ${escapedCodeContext}`;
 
       // Create a streaming response
       const completionStream = await openrouter.chat.completions.create(completionOptions);
+      const streamIterable = completionStream as unknown as AsyncIterable<any>;
 
       // Create a ReadableStream for SSE
       const encoder = new TextEncoder();
@@ -248,7 +255,7 @@ ${escapedCodeContext}`;
 
             // Stream the response
             let hasContent = false;
-            for await (const chunk of completionStream) {
+            for await (const chunk of streamIterable) {
               const content = chunk.choices[0]?.delta?.content || '';
               if (content) {
                 hasContent = true;
