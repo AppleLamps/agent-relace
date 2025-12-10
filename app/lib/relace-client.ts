@@ -11,9 +11,9 @@ export function getRelaceClient(): Relace {
     throw new Error('RELACE_API_KEY is not configured.');
   }
 
-  // Validate full API key format: rlc- prefix followed by alphanumeric characters and underscores (minimum 32 chars after prefix)
-  if (!apiKey.startsWith('rlc-') || !/^rlc-[a-zA-Z0-9_]{32,}$/.test(apiKey)) {
-    throw new Error('Invalid RELACE_API_KEY format. Expected format: rlc-<32+ alphanumeric characters and underscores>.');
+  // Validate full API key format: rlc- prefix followed by alphanumeric characters, underscores, and hyphens (minimum 32 chars after prefix)
+  if (!apiKey.startsWith('rlc-') || !/^rlc-[a-zA-Z0-9_-]{32,}$/.test(apiKey)) {
+    throw new Error('Invalid RELACE_API_KEY format. Expected format: rlc-<32+ alphanumeric characters, underscores, and hyphens>.');
   }
 
   return new Relace({ apiKey });

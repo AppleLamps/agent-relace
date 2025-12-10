@@ -57,18 +57,18 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Relace Chat</h1>
-          <p className="text-gray-600">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 p-4">
+      <div className="bg-white p-10 rounded-2xl shadow-2xl shadow-gray-200/50 max-w-md w-full border border-gray-100">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-semibold text-gray-900 mb-3 tracking-tight">Relace Chat</h1>
+          <p className="text-gray-500 text-sm leading-relaxed">
             Connect your GitHub repository and chat with AI about your codebase
           </p>
         </div>
-        
-        <div className="space-y-4">
+
+        <div className="space-y-5">
           <div>
-            <label htmlFor="github-url" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="github-url" className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
               GitHub Repository URL
             </label>
             <input
@@ -85,21 +85,21 @@ export default function Home() {
                 }
               }}
               placeholder="https://github.com/username/repo"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-900 placeholder-gray-400"
               disabled={loading}
             />
           </div>
-          
+
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-red-600 text-sm">
               {error}
             </div>
           )}
-          
+
           <button
             onClick={handleConnectRepo}
             disabled={loading || !githubUrl.trim()}
-            className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+            className="w-full px-4 py-3.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all duration-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/25"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -113,10 +113,10 @@ export default function Home() {
               'Connect Repository'
             )}
           </button>
-          
-          <div className="text-xs text-gray-500 text-center mt-4">
+
+          <div className="text-xs text-gray-400 text-center mt-6 space-y-1">
             <p>Your repository will be indexed for semantic search.</p>
-            <p className="mt-1">This may take a few moments for large repositories.</p>
+            <p>This may take a few moments for large repositories.</p>
           </div>
         </div>
       </div>
