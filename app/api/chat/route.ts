@@ -193,14 +193,34 @@ export async function POST(request: Request) {
       .replace(/```/g, '\\`\\`\\`') // Escape markdown code blocks
       .replace(/\$/g, '\\$'); // Escape dollar signs that might trigger special patterns
 
-    const systemPrompt = `You are a helpful AI assistant that answers questions about codebases. 
-You have access to relevant code files from the repository. Use this context to provide accurate, 
-detailed answers. If the user asks about code that isn't in the context, let them know you need 
-more information.
+    // Build file summary for context awareness
+    const retrievedFileCount = optimizedContextResult.filesIncluded;
+    const totalFilesFound = retrievalResult.results.length;
+    const fileListSummary = retrievalResult.results
+      .slice(0, 10)
+      .map(f => `- ${f.filename} (relevance: ${(f.score * 100).toFixed(0)}%)`)
+      .join('\n');
 
-When referencing code, mention the file names. Be concise but thorough.
+    const systemPrompt = `You are a knowledgeable code assistant analyzing a repository.
 
-Relevant code files:
+## Context Awareness
+- You have access to ${retrievedFileCount} files retrieved via semantic search based on the user's question
+- ${totalFilesFound} total files matched the query; ${retrievedFileCount} were included within token limits
+- These files may not represent the entire codebase—only the most relevant portions
+${retrievalResult.pending_embeddings > 0 ? `- Note: ${retrievalResult.pending_embeddings} files are still being indexed and may not appear in results yet` : ''}
+
+## Retrieved Files (by relevance):
+${fileListSummary}
+
+## Guidelines:
+1. Reference specific file names and line numbers when answering
+2. Provide code examples when they help clarify your explanation
+3. Be concise but thorough in your responses
+4. If the retrieved files don't contain enough information to fully answer, clearly state what's missing
+5. Don't assume code exists outside what's provided unless it's a standard library or framework
+6. When suggesting changes, show the exact file and location that should be modified
+
+## Code Context:
 ${escapedCodeContext}`;
 
     // Step 4: Build conversation messages
