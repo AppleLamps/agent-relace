@@ -6,15 +6,16 @@ import { Relace } from '@relace-ai/relace';
  */
 export function getRelaceClient(): Relace {
   const apiKey = process.env.RELACE_API_KEY;
-  
+
   if (!apiKey) {
-    throw new Error('RELACE_API_KEY is not configured');
+    throw new Error('RELACE_API_KEY is not configured.');
   }
-  
-  if (!apiKey.startsWith('rlc-')) {
-    throw new Error('Invalid RELACE_API_KEY format. Expected format: rlc-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+
+  // Validate full API key format: rlc- prefix followed by alphanumeric characters (minimum 32 chars after prefix)
+  if (!apiKey.startsWith('rlc-') || !/^rlc-[a-zA-Z0-9]{32,}$/.test(apiKey)) {
+    throw new Error('Invalid RELACE_API_KEY format. Expected format: rlc-<32+ alphanumeric characters>.');
   }
-  
+
   return new Relace({ apiKey });
 }
 
@@ -43,8 +44,8 @@ export function isRelaceError(error: any): error is RelaceError {
 export function extractRelaceError(error: any): { code: string; message: string; status: number } {
   if (isRelaceError(error)) {
     const errorCode = error.error?.code || 'unknown_error';
-    const errorMessage = error.error?.message || error.message || 'An error occurred';
-    
+    const errorMessage = error.error?.message || error.message || 'An error occurred.';
+
     // Map error codes to HTTP status codes
     const statusMap: Record<string, number> = {
       missing_api_key: 401,
@@ -62,29 +63,29 @@ export function extractRelaceError(error: any): { code: string; message: string;
       application_error: 500,
       internal_server_error: 500,
     };
-    
+
     return {
       code: errorCode,
       message: errorMessage,
       status: statusMap[errorCode] || 500,
     };
   }
-  
+
   // Handle HTTP response errors
   if (error.response) {
     const status = error.response.status || 500;
     const data = error.response.data || {};
     return {
       code: data.error?.code || `http_${status}`,
-      message: data.error?.message || data.message || error.message || 'An error occurred',
+      message: data.error?.message || data.message || error.message || 'An error occurred.',
       status,
     };
   }
-  
+
   // Generic error
   return {
     code: 'unknown_error',
-    message: error.message || 'An unexpected error occurred',
+    message: error.message || 'An unexpected error occurred.',
     status: 500,
   };
 }
