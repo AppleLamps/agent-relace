@@ -85,6 +85,14 @@ export const AVAILABLE_MODELS = [
         output: '32k',
         description: 'Balanced performance with large output capacity',
     },
+    {
+        id: 'anthropic/claude-haiku-4.5',
+        name: 'Claude Haiku 4.5',
+        provider: 'Anthropic',
+        context: '200k',
+        output: '64k',
+        description: 'Fast and efficient model with strong reasoning capabilities',
+    },
 ];
 
 // Retry configuration
