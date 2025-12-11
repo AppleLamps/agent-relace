@@ -5,24 +5,20 @@ import { validateUUID, sanitizeUserInput, detectInjectionPatterns } from '../../
 import { RETRIEVAL_CONFIG, MESSAGE_VALIDATION, MODEL_CONFIG, RETRY_CONFIG, SECURITY_CONFIG, AVAILABLE_MODELS } from '../../lib/constants';
 import { buildOptimizedContext } from '../../lib/context-optimizer';
 
-// Initialize OpenRouter client (OpenAI-compatible API)
-function getOpenRouterClient(): OpenAI {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+// Module-level OpenRouter client singleton
+// Reuses HTTP agents and TLS sessions across requests for better performance
+const openrouter = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: 'https://openrouter.ai/api/v1',
+  defaultHeaders: {
+    // Use generic referer to avoid exposing internal app structure
+    'HTTP-Referer': 'https://relace.ai/',
+    'X-Title': 'Relace Chat',
+  },
+});
 
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not configured');
-  }
-
-  return new OpenAI({
-    apiKey,
-    baseURL: 'https://openrouter.ai/api/v1',
-    defaultHeaders: {
-      // Use generic referer to avoid exposing internal app structure
-      'HTTP-Referer': 'https://relace.ai/',
-      'X-Title': 'Relace Chat',
-    },
-  });
-}
+// Pre-computed valid model IDs for validation (avoids array creation on each request)
+const VALID_MODEL_IDS = AVAILABLE_MODELS.map(m => m.id);
 
 /**
  * Retry function with exponential backoff
@@ -83,9 +79,8 @@ interface RetrieveResult {
 
 export async function POST(request: Request) {
   try {
-    // Initialize clients
+    // Get cached Relace client (singleton)
     const relaceClient = getRelaceClient();
-    const openrouter = getOpenRouterClient();
 
     // Parse and validate request body
     let body;
@@ -100,9 +95,8 @@ export async function POST(request: Request) {
 
     const { repoId, message, conversationHistory = [], stream = false, model } = body;
 
-    // Validate model if provided
-    const validModelIds = AVAILABLE_MODELS.map(m => m.id);
-    const selectedModel = model && validModelIds.includes(model) ? model : MODEL_CONFIG.PRIMARY_MODEL;
+    // Validate model if provided (uses pre-computed VALID_MODEL_IDS)
+    const selectedModel = model && VALID_MODEL_IDS.includes(model) ? model : MODEL_CONFIG.PRIMARY_MODEL;
 
     // Validate inputs
     if (!repoId || typeof repoId !== 'string') {
@@ -260,7 +254,6 @@ ${escapedCodeContext}`;
     ];
 
     // Get model-specific output limits
-    const modelConfig = AVAILABLE_MODELS.find(m => m.id === selectedModel);
     const maxOutputTokens = getMaxOutputTokens(selectedModel);
 
     // Step 5: Call OpenRouter with model configuration

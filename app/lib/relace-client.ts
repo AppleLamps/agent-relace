@@ -1,10 +1,22 @@
 import { Relace } from '@relace-ai/relace';
 
 /**
- * Creates and returns a Relace client instance
- * Throws an error if API key is not configured
+ * Cached Relace client instance (lazy singleton)
+ * Initialized on first access and reused across requests
+ */
+let _relaceClient: Relace | null = null;
+
+/**
+ * Returns a cached Relace client instance (singleton pattern)
+ * Creates the client on first call, reuses on subsequent calls
+ * Throws an error if API key is not configured or invalid
  */
 export function getRelaceClient(): Relace {
+  // Return cached instance if available
+  if (_relaceClient) {
+    return _relaceClient;
+  }
+
   const apiKey = process.env.RELACE_API_KEY;
 
   if (!apiKey) {
@@ -16,7 +28,9 @@ export function getRelaceClient(): Relace {
     throw new Error('Invalid RELACE_API_KEY format. Expected format: rlc-<32+ alphanumeric characters, underscores, and hyphens>.');
   }
 
-  return new Relace({ apiKey });
+  // Create and cache the client
+  _relaceClient = new Relace({ apiKey });
+  return _relaceClient;
 }
 
 /**
